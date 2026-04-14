@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl, Share } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl, Share, Linking } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -96,36 +96,67 @@ export default function DebtorDetailScreen({ route, navigation }) {
   };
 
   const renderPayment = ({ item }) => {
-    const handleSharePayment = async () => {
-      const dateStr = new Date(item.dateISO).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-      const msg =
-        `💰 PAYMENT COLLECTION RECORD\n` +
-        `Debtor: ${debtor.name}\n` +
-        `Amount Collected: ${fmt(item.amount)}\n` +
-        `Date: ${dateStr}\n` +
-        (item.note && item.note !== 'No note' ? `Note: ${item.note}\n` : '') +
-        `\n— Shared from SalesApp`;
-      await Share.share({ message: msg });
+    const dateStr = new Date(item.dateISO).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    const dayStr  = new Date(item.dateISO).toLocaleDateString('en-GB', { weekday: 'long' });
+
+    const buildMsg = () =>
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `💰  *PAYMENT COLLECTED*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `👤 *From:* ${debtor.name}\n` +
+      `💵 *Amount Received:* ${fmt(item.amount)}\n` +
+      `📅 *Date:* ${dayStr}, ${dateStr}\n` +
+      (item.note && item.note !== 'No note' ? `📝 *Note:* ${item.note}\n` : '') +
+      `📉 *Remaining Balance:* ${fmt(debtor.balance)}\n` +
+      `🔖 *Status:* ${debtor.balance <= 0 ? '✅ FULLY PAID' : '⏳ STILL OWING'}\n` +
+      `\n_Sent via SalesApp_`;
+
+    const handleWhatsApp = () => {
+      if (!debtor.phone) return;
+      const num = debtor.phone.replace(/[^0-9]/g, '');
+      const wa  = num.startsWith('0') ? '233' + num.slice(1) : num;
+      Linking.openURL(`https://wa.me/${wa}?text=${encodeURIComponent(buildMsg())}`);
+    };
+
+    const handleSMS = () => {
+      if (!debtor.phone) return;
+      // Strip WhatsApp markdown for plain SMS
+      const plainMsg = buildMsg()
+        .replace(/\*([^*]+)\*/g, '$1')
+        .replace(/_([^_]+)_/g, '$1');
+      Linking.openURL(`sms:${debtor.phone}?body=${encodeURIComponent(plainMsg)}`);
     };
 
     return (
       <Swipeable renderRightActions={() => renderRightActions(item)}>
         <View style={styles.paymentCard}>
+          {/* Top row: icon + date/note + amount */}
           <View style={styles.paymentHeader}>
             <View style={styles.paymentIcon}>
               <Text style={{ fontSize: 16 }}>💰</Text>
             </View>
             <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={styles.paymentDate}>{new Date(item.dateISO).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</Text>
+              <Text style={styles.paymentDate}>{dateStr}</Text>
               <Text style={styles.paymentNote}>{item.note || 'No note'}</Text>
             </View>
-            <View style={{ alignItems: 'flex-end', gap: 4 }}>
-              <Text style={styles.paymentAmount}>{fmt(item.amount)}</Text>
-              <TouchableOpacity style={styles.sharePayBtn} onPress={handleSharePayment}>
-                <Text style={styles.sharePayBtnText}>📤 Share</Text>
+            <Text style={styles.paymentAmount}>{fmt(item.amount)}</Text>
+          </View>
+
+          {/* Action pills — only show when debtor has a phone */}
+          {!!debtor.phone && (
+            <View style={styles.payPillRow}>
+              {debtor.isWhatsapp && (
+                <TouchableOpacity style={[styles.payPill, styles.payPillWA]} onPress={handleWhatsApp}>
+                  <Text style={styles.payPillEmoji}>💬</Text>
+                  <Text style={[styles.payPillLabel, { color: '#25D366' }]}>WhatsApp</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity style={[styles.payPill, styles.payPillSMS]} onPress={handleSMS}>
+                <Text style={styles.payPillEmoji}>✉️</Text>
+                <Text style={[styles.payPillLabel, { color: '#6a1b9a' }]}>SMS</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          )}
         </View>
       </Swipeable>
     );
@@ -270,8 +301,12 @@ const styles = StyleSheet.create({
   paymentNote: { fontSize: 12, color: '#777', marginTop: 2 },
   paymentAmount: { fontSize: 16, fontWeight: '900', color: '#0277bd' },
 
-  sharePayBtn: { backgroundColor: '#e1f5fe', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginTop: 4 },
-  sharePayBtnText: { fontSize: 11, fontWeight: '800', color: '#0277bd' },
+  payPillRow: { flexDirection: 'row', gap: 8, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#f1f5f9' },
+  payPill:    { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, gap: 5 },
+  payPillWA:  { backgroundColor: '#e8f5e9' },
+  payPillSMS: { backgroundColor: '#f3e5f5' },
+  payPillEmoji:{ fontSize: 13 },
+  payPillLabel:{ fontSize: 11, fontWeight: '800' },
   
   swipeActions: { flexDirection: 'row', width: 140, marginBottom: 12 },
   swipeAction: { flex: 1, justifyContent: 'center', alignItems: 'center', borderRadius: 16, marginLeft: 8 },
