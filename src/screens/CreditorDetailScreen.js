@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, SafeAreaView, ScrollView, RefreshControl, Share, Linking } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, SafeAreaView, ScrollView, RefreshControl, Share, Linking, Modal, Platform } from 'react-native';
+import { MaterialIcons, FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,6 +18,8 @@ export default function CreditorDetailScreen({ route, navigation }) {
   const [creditor, setCreditor] = useState(null);
   const [payments, setPayments] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -40,6 +43,38 @@ export default function CreditorDetailScreen({ route, navigation }) {
     setRefreshing(true);
     await loadData();
     setRefreshing(false);
+  };
+
+  const confirmShare = async (type) => {
+    if (!selectedPayment || !creditor) return;
+    
+    const dateStr = new Date(selectedPayment.dateISO).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    const dayStr  = new Date(selectedPayment.dateISO).toLocaleDateString('en-GB', { weekday: 'long' });
+
+    const msg =
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `💸  *PAYMENT MADE*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `👤 *To:* ${creditor.name}\n` +
+      `💵 *Amount Paid:* ${fmt(selectedPayment.amount)}\n` +
+      `📅 *Date:* ${dayStr}, ${dateStr}\n` +
+      (selectedPayment.note && selectedPayment.note !== 'No note' ? `📝 *Note:* ${selectedPayment.note}\n` : '') +
+      `📉 *Remaining Balance:* ${fmt(creditor.balance)}\n` +
+      `🔖 *Status:* ${creditor.balance <= 0 ? '✅ FULLY CLEARED' : '⏳ STILL OWING'}\n` +
+      `\n_Sent via SalesApp_`;
+
+    setShareModalVisible(false);
+
+    if (type === 'whatsapp') {
+      const num = creditor.phone.replace(/[^0-9]/g, '');
+      const wa  = num.startsWith('0') ? '233' + num.slice(1) : num;
+      Linking.openURL(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`);
+    } else if (type === 'sms') {
+      const plainMsg = msg.replace(/\*([^*]+)\*/g, '$1').replace(/_([^_]+)_/g, '$1');
+      Linking.openURL(`sms:${creditor.phone}${Platform.OS === 'ios' ? '&' : '?'}body=${encodeURIComponent(plainMsg)}`);
+    } else {
+      await Share.share({ message: msg });
+    }
   };
 
   const handleDeletePayment = (payment) => {
@@ -99,31 +134,9 @@ export default function CreditorDetailScreen({ route, navigation }) {
     const dateStr = new Date(item.dateISO).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
     const dayStr  = new Date(item.dateISO).toLocaleDateString('en-GB', { weekday: 'long' });
 
-    const buildMsg = () =>
-      `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `💸  *PAYMENT MADE*\n` +
-      `━━━━━━━━━━━━━━━━━━━━━\n` +
-      `👤 *To:* ${creditor.name}\n` +
-      `💵 *Amount Paid:* ${fmt(item.amount)}\n` +
-      `📅 *Date:* ${dayStr}, ${dateStr}\n` +
-      (item.note && item.note !== 'No note' ? `📝 *Note:* ${item.note}\n` : '') +
-      `📉 *Remaining Balance:* ${fmt(creditor.balance)}\n` +
-      `🔖 *Status:* ${creditor.balance <= 0 ? '✅ FULLY CLEARED' : '⏳ STILL OWING'}\n` +
-      `\n_Sent via SalesApp_`;
-
-    const handleWhatsApp = () => {
-      if (!creditor.phone) return;
-      const num = creditor.phone.replace(/[^0-9]/g, '');
-      const wa  = num.startsWith('0') ? '233' + num.slice(1) : num;
-      Linking.openURL(`https://wa.me/${wa}?text=${encodeURIComponent(buildMsg())}`);
-    };
-
-    const handleSMS = () => {
-      if (!creditor.phone) return;
-      const plainMsg = buildMsg()
-        .replace(/\*([^*]+)\*/g, '$1')
-        .replace(/_([^_]+)_/g, '$1');
-      Linking.openURL(`sms:${creditor.phone}?body=${encodeURIComponent(plainMsg)}`);
+    const handleShare = () => {
+      setSelectedPayment(item);
+      setShareModalVisible(true);
     };
 
     return (
@@ -132,7 +145,7 @@ export default function CreditorDetailScreen({ route, navigation }) {
           {/* Top row: icon + date/note + amount */}
           <View style={styles.paymentHeader}>
             <View style={styles.paymentIcon}>
-              <Text style={{ fontSize: 16 }}>💸</Text>
+              <MaterialCommunityIcons name="cash-minus" size={20} color="#b71c1c" />
             </View>
             <View style={{ flex: 1, marginLeft: 12 }}>
               <Text style={styles.paymentDate}>{dateStr}</Text>
@@ -141,21 +154,13 @@ export default function CreditorDetailScreen({ route, navigation }) {
             <Text style={styles.paymentAmount}>{fmt(item.amount)}</Text>
           </View>
 
-          {/* Action pills — only show when creditor has a phone */}
-          {!!creditor.phone && (
-            <View style={styles.payPillRow}>
-              {creditor.isWhatsapp && (
-                <TouchableOpacity style={[styles.payPill, styles.payPillWA]} onPress={handleWhatsApp}>
-                  <Text style={styles.payPillEmoji}>💬</Text>
-                  <Text style={[styles.payPillLabel, { color: '#25D366' }]}>WhatsApp</Text>
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity style={[styles.payPill, styles.payPillSMS]} onPress={handleSMS}>
-                <Text style={styles.payPillEmoji}>✉️</Text>
-                <Text style={[styles.payPillLabel, { color: '#6a1b9a' }]}>SMS</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+          {/* Action pills */}
+          <View style={styles.payPillRow}>
+            <TouchableOpacity style={[styles.payPill, styles.payPillShare]} onPress={handleShare}>
+              <Ionicons name="share-social" size={14} color="#e65100" style={{ marginRight: 4 }} />
+              <Text style={[styles.payPillLabel, { color: '#e65100' }]}>Share Payment</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Swipeable>
     );
@@ -171,15 +176,17 @@ export default function CreditorDetailScreen({ route, navigation }) {
         <View style={styles.contactRow}>
           {!!creditor.phone && (
             <TouchableOpacity 
-              style={styles.contactItem} 
-              onPress={() => require('react-native').Linking.openURL(`tel:${creditor.phone}`)}
+              style={[styles.contactItem, { flexDirection: 'row', alignItems: 'center' }]} 
+              onPress={() => Linking.openURL(`tel:${creditor.phone}`)}
             >
-              <Text style={styles.contactText}>📞 {creditor.phone}</Text>
+              <Ionicons name="call" size={14} color="#fff" style={{ marginRight: 4 }} />
+              <Text style={styles.contactText}>{creditor.phone}</Text>
             </TouchableOpacity>
           )}
           {!!creditor.address && (
-            <View style={styles.contactItem}>
-              <Text style={styles.contactText}>📍 {creditor.address}</Text>
+            <View style={[styles.contactItem, { flexDirection: 'row', alignItems: 'center' }]}>
+              <Ionicons name="location" size={14} color="#fff" style={{ marginRight: 4 }} />
+              <Text style={styles.contactText}>{creditor.address}</Text>
             </View>
           )}
         </View>
@@ -197,8 +204,9 @@ export default function CreditorDetailScreen({ route, navigation }) {
         </View>
 
         {isPaid && (
-          <View style={styles.paidBadge}>
-            <Text style={styles.paidBadgeText}>FULLY PAID 🎉</Text>
+          <View style={[styles.paidBadge, { flexDirection: 'row', alignItems: 'center' }]}>
+            <MaterialCommunityIcons name="party-popper" size={16} color="#fff" style={{ marginRight: 6 }} />
+            <Text style={styles.paidBadgeText}>FULLY PAID</Text>
           </View>
         )}
       </View>
@@ -217,13 +225,55 @@ export default function CreditorDetailScreen({ route, navigation }) {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#b71c1c']} />}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>⌛</Text>
+              <Ionicons name="time-outline" size={60} color="#cbd5e1" />
               <Text style={styles.emptyTitle}>No payments yet</Text>
               <Text style={styles.emptySub}>When you pay this creditor, record it here to track the balance.</Text>
             </View>
           }
         />
       </View>
+
+      {/* ── Share Menu Modal ── */}
+      <Modal visible={shareModalVisible} transparent animationType="fade" onRequestClose={() => setShareModalVisible(false)}>
+        <TouchableOpacity 
+          style={styles.modalOverlay} 
+          activeOpacity={1} 
+          onPress={() => setShareModalVisible(false)}
+        >
+          <View style={styles.shareMenu}>
+            <Text style={styles.shareMenuTitle}>Share Payment Via</Text>
+            
+            {!!creditor?.phone && (
+              <>
+                <TouchableOpacity style={styles.shareOption} onPress={() => confirmShare('whatsapp')}>
+                  <View style={[styles.shareIcon, { backgroundColor: '#e8f5e9' }]}>
+                    <FontAwesome name="whatsapp" size={24} color="#25D366" />
+                  </View>
+                  <Text style={styles.shareActionLabel}>WhatsApp</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.shareOption} onPress={() => confirmShare('sms')}>
+                  <View style={[styles.shareIcon, { backgroundColor: '#f3e5f5' }]}>
+                    <MaterialIcons name="sms" size={24} color="#7b1fa2" />
+                  </View>
+                  <Text style={styles.shareActionLabel}>SMS Message</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            <TouchableOpacity style={styles.shareOption} onPress={() => confirmShare('general')}>
+              <View style={[styles.shareIcon, { backgroundColor: '#fff3e0' }]}>
+                <Ionicons name="share-social" size={24} color="#e65100" />
+              </View>
+              <Text style={styles.shareActionLabel}>Other Apps</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.shareCancel} onPress={() => setShareModalVisible(false)}>
+              <Text style={styles.shareCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       {/* ── Footer Button ── */}
       <View style={[styles.footer, { paddingBottom: 20 + insets.bottom }]}>
@@ -333,4 +383,59 @@ const styles = StyleSheet.create({
   },
   disabledBtn: { backgroundColor: '#ccc', shadowOpacity: 0 },
   primaryBtnText: { color: '#fff', fontSize: 15, fontWeight: '900', letterSpacing: 1 },
+
+  // Share Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  shareMenu: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 24,
+    width: '85%',
+    maxWidth: 400,
+  },
+  shareMenuTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#94a3b8',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  shareOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  shareIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  shareActionLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1e293b',
+  },
+  shareCancel: {
+    marginTop: 16,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  shareCancelText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#64748b',
+  },
+  payPillShare: { backgroundColor: '#fff3e0' },
 });

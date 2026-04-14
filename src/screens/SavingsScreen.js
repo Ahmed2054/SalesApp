@@ -1,8 +1,8 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   RefreshControl, Alert, SafeAreaView, Animated, Modal, ScrollView, DeviceEventEmitter
 } from 'react-native';
+import { MaterialIcons, FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
 import { useFocusEffect } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
@@ -263,7 +263,14 @@ export default function SavingsScreen({ navigation }) {
         <View style={[styles.cardAccent, { backgroundColor: item.type === 'deposit' ? '#2e7d32' : '#c62828' }]} />
         <View style={styles.cardBody}>
           <View style={styles.cardTop}>
-            <Text style={styles.cardType}>{item.type === 'deposit' ? '💰 Deposit' : '💸 Withdrawal'}</Text>
+            <Text style={styles.cardType}>
+              {item.type === 'deposit' ? (
+                <MaterialCommunityIcons name="cash-plus" size={14} color="#777" />
+              ) : (
+                <MaterialCommunityIcons name="cash-minus" size={14} color="#777" />
+              )}
+              {item.type === 'deposit' ? ' Deposit' : ' Withdrawal'}
+            </Text>
             <Text style={[styles.cardAmount, { color: item.type === 'deposit' ? '#2e7d32' : '#c62828' }]}>
               {item.type === 'deposit' ? '+' : '-'}{fmt(item.amount)}
             </Text>
@@ -302,7 +309,7 @@ export default function SavingsScreen({ navigation }) {
         </View>
 
         <View style={styles.headerIconContainer}>
-          <Text style={styles.headerEmoji}>🏦</Text>
+          <MaterialCommunityIcons name="bank" size={24} color="#fff" />
         </View>
 
         <Text style={styles.headerLabel}>Total Savings Balance</Text>
@@ -343,7 +350,10 @@ export default function SavingsScreen({ navigation }) {
             </TouchableOpacity>
           )}
           <TouchableOpacity style={styles.calBtn} onPress={() => setShowCalendar(true)}>
-            <Text style={styles.calBtnText}>📅 View Calendar</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Ionicons name="calendar-outline" size={14} color="#00695c" />
+              <Text style={styles.calBtnText}>View Calendar</Text>
+            </View>
           </TouchableOpacity>
         </View>
       </View>
@@ -378,7 +388,7 @@ export default function SavingsScreen({ navigation }) {
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>📭</Text>
+            <Ionicons name="receipt-outline" size={60} color="#cbd5e1" style={{ marginBottom: 12 }} />
             <Text style={styles.emptyTitle}>No records found</Text>
             <Text style={styles.emptySub}>Adjust filters or tap + to add a record</Text>
           </View>
@@ -463,7 +473,7 @@ export default function SavingsScreen({ navigation }) {
         onPress={() => navigation.navigate('AddSaving')}
         activeOpacity={0.85}
       >
-        <Text style={styles.fabText}>＋</Text>
+        <Ionicons name="add" size={32} color="#fff" />
       </TouchableOpacity>
     </View>
   );

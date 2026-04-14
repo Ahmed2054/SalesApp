@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  View, Text, StyleSheet, TextInput, TouchableOpacity,
-  ScrollView, Alert, KeyboardAvoidingView, Platform
-} from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { MaterialIcons, FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -131,7 +129,7 @@ export default function AddDebtorPaymentScreen({ route, navigation }) {
           <View style={styles.card}>
             <View style={styles.field}>
               <View style={styles.labelRow}>
-                <Text style={styles.fieldIcon}>💰</Text>
+                <MaterialCommunityIcons name="cash-check" size={14} color="#94a3b8" style={{ marginRight: 6 }} />
                 <Text style={styles.label}>Amount Collected (GH₵)</Text>
               </View>
               <TextInput
@@ -150,7 +148,7 @@ export default function AddDebtorPaymentScreen({ route, navigation }) {
 
             <View style={[styles.field, { borderBottomWidth: 0 }]}>
               <View style={styles.labelRow}>
-                <Text style={styles.fieldIcon}>📅</Text>
+                <Ionicons name="calendar-outline" size={14} color="#94a3b8" style={{ marginRight: 6 }} />
                 <Text style={styles.label}>Date Received</Text>
               </View>
               <TouchableOpacity style={styles.dateBtn} onPress={() => setShowPicker(true)}>
@@ -159,7 +157,7 @@ export default function AddDebtorPaymentScreen({ route, navigation }) {
                   <Text style={styles.dateDay}>{date.toLocaleDateString('en-GB', { weekday: 'long' })}</Text>
                 </View>
                 <View style={styles.calendarIconBg}>
-                  <Text style={styles.dateIcon}>📅</Text>
+                  <Ionicons name="calendar" size={18} color="#0277bd" />
                 </View>
               </TouchableOpacity>
             </View>
@@ -171,7 +169,7 @@ export default function AddDebtorPaymentScreen({ route, navigation }) {
           <View style={styles.card}>
             <View style={[styles.field, { borderBottomWidth: 0 }]}>
               <View style={styles.labelRow}>
-                <Text style={styles.fieldIcon}>📝</Text>
+                <Ionicons name="document-text-outline" size={14} color="#94a3b8" style={{ marginRight: 6 }} />
                 <Text style={styles.label}>Note / Details</Text>
               </View>
               <TextInput

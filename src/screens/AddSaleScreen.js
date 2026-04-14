@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Alert, ScrollView, KeyboardAvoidingView, Platform,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { MaterialIcons, FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
@@ -126,13 +124,19 @@ export default function AddSaleScreen({ navigation, route }) {
                style={[styles.typeBtn, type === 'deposit' && styles.typeBtnActiveDeposit]} 
                onPress={() => setType('deposit')}
              >
-               <Text style={[styles.typeBtnText, type === 'deposit' && styles.typeBtnTextActive]}>💰 Deposit</Text>
+               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                 <MaterialCommunityIcons name="cash-plus" size={16} color={type === 'deposit' ? '#1e293b' : '#94a3b8'} />
+                 <Text style={[styles.typeBtnText, type === 'deposit' && styles.typeBtnTextActive]}>Deposit</Text>
+               </View>
              </TouchableOpacity>
              <TouchableOpacity 
                style={[styles.typeBtn, type === 'withdrawal' && styles.typeBtnActiveWithdraw]} 
                onPress={() => setType('withdrawal')}
              >
-               <Text style={[styles.typeBtnText, type === 'withdrawal' && styles.typeBtnTextActive]}>💸 Withdrawal</Text>
+               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                 <MaterialCommunityIcons name="cash-minus" size={16} color={type === 'withdrawal' ? '#1e293b' : '#94a3b8'} />
+                 <Text style={[styles.typeBtnText, type === 'withdrawal' && styles.typeBtnTextActive]}>Withdrawal</Text>
+               </View>
              </TouchableOpacity>
           </View>
         </View>
@@ -142,7 +146,7 @@ export default function AddSaleScreen({ navigation, route }) {
           <View style={styles.card}>
             <View style={styles.field}>
               <View style={styles.labelRow}>
-                <Text style={styles.fieldIcon}>💵</Text>
+                <MaterialIcons name="attach-money" size={14} color="#94a3b8" style={{ marginRight: 6 }} />
                 <Text style={styles.label}>Amount (GH₵)</Text>
               </View>
               <View style={styles.inputWrap}>
@@ -163,7 +167,7 @@ export default function AddSaleScreen({ navigation, route }) {
 
             <View style={[styles.field, { borderBottomWidth: 0 }]}>
               <View style={styles.labelRow}>
-                <Text style={styles.fieldIcon}>📅</Text>
+                <Ionicons name="calendar-outline" size={14} color="#94a3b8" style={{ marginRight: 6 }} />
                 <Text style={styles.label}>Transaction Date</Text>
               </View>
               <TouchableOpacity style={styles.datePickerBtn} onPress={openCalendar}>
@@ -172,7 +176,7 @@ export default function AddSaleScreen({ navigation, route }) {
                   <Text style={styles.datePickerDay}>{new Date(dateISO).toLocaleDateString('en-GB', { weekday: 'long' })}</Text>
                 </View>
                 <View style={styles.calendarIconBg}>
-                  <Text style={styles.datePickerIcon}>📅</Text>
+                  <Ionicons name="calendar" size={18} color="#1a237e" />
                 </View>
               </TouchableOpacity>
             </View>
@@ -203,7 +207,7 @@ export default function AddSaleScreen({ navigation, route }) {
           <View style={styles.card}>
             <View style={[styles.field, { borderBottomWidth: 0 }]}>
               <View style={styles.labelRow}>
-                <Text style={styles.fieldIcon}>📝</Text>
+                <Ionicons name="document-text-outline" size={14} color="#94a3b8" style={{ marginRight: 6 }} />
                 <Text style={styles.label}>Note / Description</Text>
               </View>
               <TextInput

@@ -1,8 +1,10 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   RefreshControl, FlatList, Animated, DeviceEventEmitter, Modal, LayoutAnimation, Platform
 } from 'react-native';
+import { checkForUpdates } from '../utils/updateHelper';
+import { MaterialIcons, FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -150,15 +152,20 @@ export default function DashboardScreen({ navigation }) {
   }, [load, selectedYear, selectedMonth]);
 
   useEffect(() => {
+    // Automatic update check on app start
+    checkForUpdates(true);
+  }, []);
+
+  useEffect(() => {
     const sub = DeviceEventEmitter.addListener('db_restored', load);
     return () => sub.remove();
   }, [load]);
 
   const balanceItems = [
-    { label: 'Total Sales Balance', value: data?.salesStats?.totalAmount ?? 0, color: '#1a237e', icon: '🛍️' },
-    { label: 'Personal Savings Balance', value: data?.savingStats?.balance ?? 0, color: '#00695c', icon: '🏦' },
-    { label: 'Total Creditors Balance', value: data?.creditorStats?.totalOwed ?? 0, color: '#b71c1c', icon: '🤝' },
-    { label: 'Total Debtors Balance', value: data?.debtorStats?.totalOwed ?? 0, color: '#0277bd', icon: '💳' }
+    { label: 'Total Sales Balance', value: data?.salesStats?.totalAmount ?? 0, color: '#1a237e', icon: <MaterialIcons name="shopping-bag" size={14} color="#fff" /> },
+    { label: 'Personal Savings Balance', value: data?.savingStats?.balance ?? 0, color: '#00695c', icon: <MaterialCommunityIcons name="bank" size={14} color="#fff" /> },
+    { label: 'Total Creditors Balance', value: data?.creditorStats?.totalOwed ?? 0, color: '#b71c1c', icon: <MaterialCommunityIcons name="handshake" size={14} color="#fff" /> },
+    { label: 'Total Debtors Balance', value: data?.debtorStats?.totalOwed ?? 0, color: '#0277bd', icon: <MaterialCommunityIcons name="card-text-outline" size={14} color="#fff" /> }
   ];
 
   const manuallyFlip = useCallback((dir = 1) => {
@@ -215,32 +222,34 @@ export default function DashboardScreen({ navigation }) {
   if (!data) return null;
 
   const renderActivity = ({ item }) => {
-    let icon = '🛍️';
-    let label = 'Sales History';
-    let bgColor = '#e8eaf6';
-    let textColor = '#1a237e';
-
+    let icon, label, bgColor, textColor;
+    
     if (item.kind === 'saving') {
-      icon = '🏦';
+      icon = <MaterialCommunityIcons name="bank" size={20} color="#00695c" />;
       label = 'Savings History';
       bgColor = '#e0f2f1';
       textColor = '#00695c';
     } else if (item.kind === 'creditor') {
-      icon = '🤝';
+      icon = <MaterialCommunityIcons name="handshake" size={20} color="#b71c1c" />;
       label = 'Debt Repayment';
       bgColor = '#fdf0f0';
       textColor = '#b71c1c';
     } else if (item.kind === 'debtor') {
-      icon = '👤';
+      icon = <Ionicons name="person" size={20} color="#0277bd" />;
       label = 'Debt Collection';
       bgColor = '#f0f7ff';
       textColor = '#0277bd';
+    } else {
+      icon = <MaterialIcons name="shopping-bag" size={20} color="#1a237e" />;
+      label = 'Sales History';
+      bgColor = '#e8eaf6';
+      textColor = '#1a237e';
     }
 
     return (
       <View style={styles.activityCard}>
         <View style={[styles.activityIcon, { backgroundColor: bgColor }]}>
-          <Text style={{ fontSize: 16 }}>{icon}</Text>
+          {icon}
         </View>
         <View style={styles.activityInfo}>
           <Text style={[styles.activityKind, { color: textColor }]}>{label}</Text>
@@ -318,9 +327,9 @@ export default function DashboardScreen({ navigation }) {
                             <View style={[styles.tickerIndicatorBar, { backgroundColor: item.color }]} />
                             <View style={styles.tickerCardContent}>
                                <View style={styles.tickerContentRow}>
-                                  <View style={[styles.tickerIconSmall, { backgroundColor: item.color }]}>
-                                     <Text style={styles.tickerEmojiSmall}>{item.icon}</Text>
-                                  </View>
+                                   <View style={[styles.tickerIconSmall, { backgroundColor: item.color }]}>
+                                      {item.icon}
+                                   </View>
                                   <View style={{ flex: 1, marginLeft: 12 }}>
                                      <Text style={styles.tickerCardLabel}>{item.label}</Text>
                                      <Text style={styles.tickerCardValue}>{fmt(item.value)}</Text>
@@ -356,7 +365,7 @@ export default function DashboardScreen({ navigation }) {
                         <View style={styles.tickerCardContent}>
                            <View style={styles.tickerContentRow}>
                               <View style={[styles.tickerIconSmall, { backgroundColor: balanceItems[balanceIndex].color }]}>
-                                 <Text style={styles.tickerEmojiSmall}>{balanceItems[balanceIndex].icon}</Text>
+                                 {balanceItems[balanceIndex].icon}
                               </View>
                               <View style={{ flex: 1, marginLeft: 12 }}>
                                  <Text style={styles.tickerCardLabel}>{balanceItems[balanceIndex].label}</Text>
@@ -383,7 +392,10 @@ export default function DashboardScreen({ navigation }) {
             activeOpacity={0.7}
             onPress={toggleActions}
           >
-            <Text style={styles.sectionTitle}>💰 Quick Actions</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <MaterialIcons name="bolt" size={20} color="#1e293b" />
+              <Text style={styles.sectionTitle}>Quick Actions</Text>
+            </View>
             <Text style={[styles.toggleIcon, { transform: [{ rotate: showQuickActions ? '0deg' : '180deg' }] }]}>
               ▾
             </Text>
@@ -399,28 +411,28 @@ export default function DashboardScreen({ navigation }) {
             >
               <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('Sales')}>
                 <View style={[styles.actionIcon, { backgroundColor: '#1a237e' }]}>
-                  <Text style={styles.actionEmoji}>🛍️</Text>
+                  <MaterialIcons name="shopping-bag" size={24} color="#fff" />
                 </View>
                 <Text style={styles.actionText}>Sales</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('Savings')}>
                 <View style={[styles.actionIcon, { backgroundColor: '#00695c' }]}>
-                  <Text style={styles.actionEmoji}>🏦</Text>
+                  <MaterialCommunityIcons name="bank" size={24} color="#fff" />
                 </View>
                 <Text style={styles.actionText}>Savings</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('Creditors')}>
                 <View style={[styles.actionIcon, { backgroundColor: '#b71c1c' }]}>
-                  <Text style={styles.actionEmoji}>🤝</Text>
+                  <MaterialCommunityIcons name="handshake" size={24} color="#fff" />
                 </View>
                 <Text style={styles.actionText}>Creditors</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('Debtors')}>
                 <View style={[styles.actionIcon, { backgroundColor: '#0277bd' }]}>
-                  <Text style={styles.actionEmoji}>💳</Text>
+                  <MaterialCommunityIcons name="card-text-outline" size={24} color="#fff" />
                 </View>
                 <Text style={styles.actionText}>Debtors</Text>
               </TouchableOpacity>

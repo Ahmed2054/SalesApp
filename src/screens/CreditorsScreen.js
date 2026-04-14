@@ -2,8 +2,9 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   RefreshControl, Alert, SafeAreaView, Animated, DeviceEventEmitter,
-  Linking, Share
+  Linking, Share, Modal, Platform
 } from 'react-native';
+import { MaterialIcons, FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,6 +22,8 @@ export default function CreditorsScreen({ navigation }) {
   const [stats, setStats] = useState({ totalOwed: 0, count: 0 });
   const [refreshing, setRefreshing] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all'); // all | paid | owing
+  const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   const filtered = useMemo(() => {
     if (statusFilter === 'all') return creditors;
@@ -28,6 +31,41 @@ export default function CreditorsScreen({ navigation }) {
     if (statusFilter === 'owing') return creditors.filter(c => c.balance > 0);
     return creditors;
   }, [creditors, statusFilter]);
+
+  const confirmShare = async (type) => {
+    if (!selectedItem) return;
+    const isPaid = selectedItem.balance <= 0;
+    const dueStr = selectedItem.duedate
+      ? new Date(selectedItem.duedate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+      : 'Not set';
+
+    const msg =
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `📋  *CREDITOR RECORD*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━\n` +
+      `👤 *Name:* ${selectedItem.name}\n` +
+      (selectedItem.phone ? `📞 *Phone:* ${selectedItem.phone}\n` : '') +
+      (selectedItem.address ? `📍 *Address:* ${selectedItem.address}\n` : '') +
+      `\n💸 *Amount Owed:* ${fmt(selectedItem.amount)}\n` +
+      `📉 *Balance Due:* ${fmt(selectedItem.balance)}\n` +
+      `🔖 *Status:* ${isPaid ? '✅ FULLY PAID' : '⏳ STILL OWING'}\n` +
+      `📅 *Due Date:* ${dueStr}\n` +
+      (selectedItem.note ? `📝 *Note:* ${selectedItem.note}\n` : '') +
+      `\n_Sent via SalesApp_`;
+
+    setShareModalVisible(false);
+
+    if (type === 'whatsapp') {
+      const num = selectedItem.phone.replace(/[^0-9]/g, '');
+      const wa = num.startsWith('0') ? '233' + num.slice(1) : num;
+      Linking.openURL(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`);
+    } else if (type === 'sms') {
+      const plainMsg = msg.replace(/\*([^*]+)\*/g, '$1').replace(/_([^_]+)_/g, '$1');
+      Linking.openURL(`sms:${selectedItem.phone}${Platform.OS === 'ios' ? '&' : '?'}body=${encodeURIComponent(plainMsg)}`);
+    } else {
+      await Share.share({ message: msg });
+    }
+  };
 
   const load = useCallback(async () => {
     try {
@@ -111,35 +149,9 @@ export default function CreditorsScreen({ navigation }) {
     const handleSMS = () => {
       if (item.phone) Linking.openURL(`sms:${item.phone}`);
     };
-    const buildCreditorMsg = () => {
-      const dueStr = item.duedate
-        ? new Date(item.duedate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-        : 'Not set';
-      return (
-        `━━━━━━━━━━━━━━━━━━━━━\n` +
-        `📋  *CREDITOR RECORD*\n` +
-        `━━━━━━━━━━━━━━━━━━━━━\n` +
-        `👤 *Name:* ${item.name}\n` +
-        (item.phone  ? `📞 *Phone:* ${item.phone}\n` : '') +
-        (item.address? `📍 *Address:* ${item.address}\n` : '') +
-        `\n💸 *Amount Owed:* ${fmt(item.amount)}\n` +
-        `📉 *Balance Due:* ${fmt(item.balance)}\n` +
-        `🔖 *Status:* ${isPaid ? '✅ FULLY PAID' : '⏳ STILL OWING'}\n` +
-        `📅 *Due Date:* ${dueStr}\n` +
-        (item.note ? `📝 *Note:* ${item.note}\n` : '') +
-        `\n_Sent via SalesApp_`
-      );
-    };
-
-    const handleShare = async () => {
-      const msg = buildCreditorMsg();
-      if (item.phone && item.isWhatsapp) {
-        const num = item.phone.replace(/[^0-9]/g, '');
-        const wa = num.startsWith('0') ? '233' + num.slice(1) : num;
-        Linking.openURL(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`);
-      } else {
-        await Share.share({ message: msg });
-      }
+    const handleShare = () => {
+      setSelectedItem(item);
+      setShareModalVisible(true);
     };
 
     return (
@@ -158,7 +170,12 @@ export default function CreditorsScreen({ navigation }) {
               <View style={styles.cardTop}>
                 <View>
                   <Text style={styles.cardName}>{item.name}</Text>
-                  {!!item.phone && <Text style={styles.cardInfoMini}>📞 {item.phone}</Text>}
+                  {!!item.phone && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Ionicons name="call" size={12} color="#64748b" style={{ marginRight: 4 }} />
+                      <Text style={styles.cardInfoMini}>{item.phone}</Text>
+                    </View>
+                  )}
                 </View>
                 <Text style={[styles.cardStatus, { color: isPaid ? '#4caf50' : '#b71c1c' }]}>
                   {isPaid ? 'FULLY PAID' : 'STILL OWING'}
@@ -166,7 +183,7 @@ export default function CreditorsScreen({ navigation }) {
               </View>
               <View style={styles.cardValues}>
                 <View>
-                  <Text style={styles.valLabel}>LOAN AMOUNT</Text>
+                  <Text style={styles.valLabel}>AMOUNT OWED</Text>
                   <Text style={styles.valAmt}>{fmt(item.amount)}</Text>
                 </View>
                 <View style={styles.divider} />
@@ -186,24 +203,18 @@ export default function CreditorsScreen({ navigation }) {
               <View style={styles.actionIconRow}>
                 {!!item.phone && (
                   <TouchableOpacity style={[styles.pill, styles.pillCall]} onPress={handleCall}>
-                    <Text style={styles.pillEmoji}>📞</Text>
+                    <Ionicons name="call" size={14} color="#b71c1c" style={{ marginRight: 4 }} />
                     <Text style={[styles.pillLabel, { color: '#b71c1c' }]}>Call</Text>
                   </TouchableOpacity>
                 )}
                 {!!item.phone && item.isWhatsapp && (
                   <TouchableOpacity style={[styles.pill, styles.pillWA]} onPress={handleWhatsApp}>
-                    <Text style={styles.pillEmoji}>💬</Text>
+                    <FontAwesome name="whatsapp" size={15} color="#25D366" style={{ marginRight: 4 }} />
                     <Text style={[styles.pillLabel, { color: '#25D366' }]}>WA</Text>
                   </TouchableOpacity>
                 )}
-                {!!item.phone && (
-                  <TouchableOpacity style={[styles.pill, styles.pillSMS]} onPress={handleSMS}>
-                    <Text style={styles.pillEmoji}>✉️</Text>
-                    <Text style={[styles.pillLabel, { color: '#7b1fa2' }]}>SMS</Text>
-                  </TouchableOpacity>
-                )}
                 <TouchableOpacity style={[styles.pill, styles.pillShare]} onPress={handleShare}>
-                  <Text style={styles.pillEmoji}>↗</Text>
+                  <Ionicons name="share-social" size={15} color="#e65100" style={{ marginRight: 4 }} />
                   <Text style={[styles.pillLabel, { color: '#e65100' }]}>Share</Text>
                 </TouchableOpacity>
               </View>
@@ -222,7 +233,7 @@ export default function CreditorsScreen({ navigation }) {
       <View style={[styles.header, { paddingTop: insets.top - 30 }]}>
         <Text style={styles.headerDesc}>Those you are owing</Text>
         <View style={styles.headerIconContainer}>
-          <Text style={styles.headerEmoji}>🤝</Text>
+          <MaterialCommunityIcons name="handshake" size={26} color="#fff" />
         </View>
 
         <Text style={styles.headerLabel}>Total Creditors Balance</Text>
@@ -257,12 +268,50 @@ export default function CreditorsScreen({ navigation }) {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#b71c1c']} />}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>📝</Text>
+            <MaterialCommunityIcons name="clipboard-text-outline" size={60} color="#cbd5e1" />
             <Text style={styles.emptyTitle}>Clear of Debt?</Text>
             <Text style={styles.emptySub}>Add creditors here to keep track of what you owe others.</Text>
           </View>
         }
       />
+
+      {/* ── Share Menu Modal ── */}
+      <Modal visible={shareModalVisible} transparent animationType="fade" onRequestClose={() => setShareModalVisible(false)}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShareModalVisible(false)}
+        >
+          <View style={styles.shareMenu}>
+            <Text style={styles.shareMenuTitle}>Share Via</Text>
+
+            <TouchableOpacity style={styles.shareOption} onPress={() => confirmShare('whatsapp')}>
+              <View style={[styles.shareIcon, { backgroundColor: '#e8f5e9' }]}>
+                <FontAwesome name="whatsapp" size={24} color="#25D366" />
+              </View>
+              <Text style={styles.shareActionLabel}>WhatsApp</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.shareOption} onPress={() => confirmShare('sms')}>
+              <View style={[styles.shareIcon, { backgroundColor: '#f3e5f5' }]}>
+                <MaterialIcons name="sms" size={24} color="#7b1fa2" />
+              </View>
+              <Text style={styles.shareActionLabel}>SMS Message</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.shareOption} onPress={() => confirmShare('general')}>
+              <View style={[styles.shareIcon, { backgroundColor: '#fff3e0' }]}>
+                <Ionicons name="share-social" size={24} color="#e65100" />
+              </View>
+              <Text style={styles.shareActionLabel}>Other Apps</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.shareCancel} onPress={() => setShareModalVisible(false)}>
+              <Text style={styles.shareCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       {/* ── FAB ── */}
       <TouchableOpacity
@@ -270,7 +319,7 @@ export default function CreditorsScreen({ navigation }) {
         onPress={() => navigation.navigate('AddCreditor')}
         activeOpacity={0.85}
       >
-        <Text style={styles.fabText}>＋</Text>
+        <Ionicons name="add" size={32} color="#fff" />
       </TouchableOpacity>
     </View>
   );
@@ -357,11 +406,11 @@ const styles = StyleSheet.create({
   actionIconRow: { flexDirection: 'row', marginTop: 12, gap: 6, flexWrap: 'wrap' },
   pill: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20, gap: 4 },
   pillCall: { backgroundColor: '#fce4ec' },
-  pillWA:   { backgroundColor: '#e8f5e9' },
-  pillSMS:  { backgroundColor: '#f3e5f5' },
-  pillShare:{ backgroundColor: '#fff3e0' },
-  pillEmoji:{ fontSize: 13 },
-  pillLabel:{ fontSize: 11, fontWeight: '800' },
+  pillWA: { backgroundColor: '#e8f5e9' },
+  pillSMS: { backgroundColor: '#f3e5f5' },
+  pillShare: { backgroundColor: '#fff3e0' },
+  pillEmoji: { fontSize: 13 },
+  pillLabel: { fontSize: 11, fontWeight: '800' },
 
   rightActionsRow: { flexDirection: 'row', width: 160, marginVertical: 8, borderRadius: 18, overflow: 'hidden' },
   actionBtn: { flex: 1, justifyContent: 'center', alignItems: 'center' },
@@ -391,4 +440,58 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
   },
   fabText: { fontSize: 30, color: '#fff', marginTop: -2 },
+
+  // Share Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  shareMenu: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 24,
+    width: '85%',
+    maxWidth: 400,
+  },
+  shareMenuTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#94a3b8',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  shareOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  shareIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  shareActionLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1e293b',
+  },
+  shareCancel: {
+    marginTop: 16,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  shareCancelText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#64748b',
+  },
 });

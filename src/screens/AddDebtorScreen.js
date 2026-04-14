@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Alert, ScrollView, KeyboardAvoidingView, Platform,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { MaterialIcons, FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
@@ -116,7 +114,7 @@ export default function AddDebtorScreen({ navigation, route }) {
           <View style={styles.card}>
             <View style={styles.field}>
               <View style={styles.labelRow}>
-                <Text style={styles.fieldIcon}>👤</Text>
+                <Ionicons name="person-outline" size={14} color="#94a3b8" style={{ marginRight: 6 }} />
                 <Text style={styles.label}>Full Name</Text>
               </View>
               <TextInput
@@ -134,7 +132,7 @@ export default function AddDebtorScreen({ navigation, route }) {
 
             <View style={styles.field}>
               <View style={styles.labelRow}>
-                <Text style={styles.fieldIcon}>📞</Text>
+                <Ionicons name="call-outline" size={14} color="#94a3b8" style={{ marginRight: 6 }} />
                 <Text style={styles.label}>Telephone Number</Text>
               </View>
               <TextInput
@@ -158,14 +156,14 @@ export default function AddDebtorScreen({ navigation, route }) {
                 <View style={[styles.checkbox, isWhatsapp && styles.checkboxActive]}>
                   {isWhatsapp && <Text style={styles.checkmark}>✓</Text>}
                 </View>
+                <MaterialCommunityIcons name="whatsapp" size={16} color="#25D366" />
                 <Text style={styles.whatsappLabel}>This number is on WhatsApp</Text>
-                <Text style={styles.whatsappIcon}>  </Text>
               </TouchableOpacity>
             </View>
 
             <View style={[styles.field, { borderBottomWidth: 0 }]}>
               <View style={styles.labelRow}>
-                <Text style={styles.fieldIcon}>📍</Text>
+                <Ionicons name="location-outline" size={14} color="#94a3b8" style={{ marginRight: 6 }} />
                 <Text style={styles.label}>Address / Location</Text>
               </View>
               <TextInput
@@ -188,7 +186,7 @@ export default function AddDebtorScreen({ navigation, route }) {
           <View style={styles.card}>
             <View style={styles.field}>
               <View style={styles.labelRow}>
-                <Text style={styles.fieldIcon}>📈</Text>
+                <MaterialIcons name="trending-up" size={14} color="#94a3b8" style={{ marginRight: 6 }} />
                 <Text style={styles.label}>Amount Owed To You (GH₵)</Text>
               </View>
               <TextInput
@@ -207,7 +205,7 @@ export default function AddDebtorScreen({ navigation, route }) {
 
             <View style={[styles.field, { borderBottomWidth: 0 }]}>
               <View style={styles.labelRow}>
-                <Text style={styles.fieldIcon}>🕒</Text>
+                <Ionicons name="time-outline" size={14} color="#94a3b8" style={{ marginRight: 6 }} />
                 <Text style={styles.label}>Expected Payment Date</Text>
               </View>
               <TouchableOpacity style={styles.dateSelector} onPress={openCalendar}>
@@ -218,7 +216,7 @@ export default function AddDebtorScreen({ navigation, route }) {
                   </Text>
                 </View>
                 <View style={styles.calendarIconBg}>
-                  <Text style={styles.calendarIcon}>📅</Text>
+                  <Ionicons name="calendar" size={18} color="#0277bd" />
                 </View>
               </TouchableOpacity>
             </View>
@@ -230,7 +228,7 @@ export default function AddDebtorScreen({ navigation, route }) {
           <View style={styles.card}>
             <View style={[styles.field, { borderBottomWidth: 0 }]}>
               <View style={styles.labelRow}>
-                <Text style={styles.fieldIcon}>📝</Text>
+                <Ionicons name="document-text-outline" size={14} color="#94a3b8" style={{ marginRight: 6 }} />
                 <Text style={styles.label}>Note / Details</Text>
               </View>
               <TextInput

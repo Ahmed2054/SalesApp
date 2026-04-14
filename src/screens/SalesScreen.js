@@ -3,6 +3,7 @@ import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
   RefreshControl, Alert, Modal, ScrollView, Animated, DeviceEventEmitter
 } from 'react-native';
+import { MaterialIcons, FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
 import { useFocusEffect } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
@@ -257,7 +258,12 @@ export default function SalesScreen({ navigation }) {
           <View style={styles.cardBody}>
             <View style={styles.cardTop}>
               <Text style={styles.cardType}>
-                {isWithdrawal ? '💸 Withdrawal' : '💰 Deposit'}
+                {isWithdrawal ? (
+                  <MaterialCommunityIcons name="cash-minus" size={14} color="#777" />
+                ) : (
+                  <MaterialCommunityIcons name="cash-plus" size={14} color="#777" />
+                )}
+                {isWithdrawal ? ' Withdrawal' : ' Deposit'}
               </Text>
               <Text style={[styles.cardAmount, isWithdrawal && styles.cardAmountWithdraw]}>
                 {isWithdrawal ? '-' : ''}{fmt(item.amount)}
@@ -291,7 +297,7 @@ export default function SalesScreen({ navigation }) {
         </View>
 
         <View style={styles.headerIconContainer}>
-          <Text style={styles.headerEmoji}>🛍️</Text>
+          <MaterialIcons name="shopping-bag" size={24} color="#fff" />
         </View>
 
         <Text style={styles.headerLabel}>Total Sales Balance</Text>
@@ -333,7 +339,10 @@ export default function SalesScreen({ navigation }) {
             </TouchableOpacity>
           )}
           <TouchableOpacity style={styles.calBtn} onPress={() => setShowCalendar(true)}>
-            <Text style={styles.calBtnText}>📅 View Calendar</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Ionicons name="calendar-outline" size={14} color="#1a237e" />
+              <Text style={styles.calBtnText}>View Calendar</Text>
+            </View>
           </TouchableOpacity>
         </View>
       </View>
@@ -367,7 +376,7 @@ export default function SalesScreen({ navigation }) {
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>📭</Text>
+            <Ionicons name="receipt-outline" size={60} color="#cbd5e1" style={{ marginBottom: 12 }} />
             <Text style={styles.emptyTitle}>No records for {MONTHS[selectedMonth]} {selectedYear}</Text>
             <Text style={styles.emptySub}>Tap + to add a new sales entry</Text>
           </View>
@@ -450,7 +459,7 @@ export default function SalesScreen({ navigation }) {
         onPress={() => navigation.navigate('AddSale', { record: null })}
         activeOpacity={0.85}
       >
-        <Text style={styles.fabText}>＋</Text>
+        <Ionicons name="add" size={32} color="#fff" />
       </TouchableOpacity>
     </View>
   );

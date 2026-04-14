@@ -3,7 +3,9 @@ import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
   Alert, ScrollView, Switch, Platform, Linking, DeviceEventEmitter
 } from 'react-native';
+import { MaterialIcons, FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import { checkForUpdates } from '../utils/updateHelper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
   updateSetting, 
@@ -306,35 +308,8 @@ export default function SettingsScreen() {
 
   const handleCheckForUpdate = async () => {
     setUpdateChecking(true);
-    try {
-      const res = await fetch(
-        'https://api.github.com/repos/Ahmed2054/SalesApp/releases/latest',
-        { headers: { Accept: 'application/vnd.github.v3+json' } }
-      );
-      if (!res.ok) throw new Error('not ok');
-      const data = await res.json();
-      const latest = (data.tag_name || '').replace(/^v/, '');
-      const current = '1.0.0';
-      if (latest && latest !== current) {
-        Alert.alert(
-          '🎉 Update Available!',
-          `A new version (v${latest}) is available.\nYou are on v${current}.`,
-          [
-            { text: 'Later', style: 'cancel' },
-            { text: 'Download Now', onPress: () => Linking.openURL(data.html_url) }
-          ]
-        );
-      } else {
-        Alert.alert('✅ You\'re Up to Date', `Running the latest version (v${current}).`);
-      }
-    } catch (e) {
-      Alert.alert(
-        '🟡 Check Failed',
-        'Could not reach the update server. Please check your internet connection.',
-      );
-    } finally {
-      setUpdateChecking(false);
-    }
+    await checkForUpdates(false);
+    setUpdateChecking(false);
   };
 
   const handleSaveProfile = async () => {
@@ -361,8 +336,13 @@ export default function SettingsScreen() {
   return (
     <View style={styles.root}>
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
-      <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 20 }]}>
-        <Text style={styles.title}>Settings</Text>
+      
+      {/* ── Fixed Header ── */}
+      <View style={{ paddingTop: insets.top + 20, paddingHorizontal: 24, paddingBottom: 16, backgroundColor: '#f8fafc', zIndex: 10, elevation: 2, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }}>
+        <Text style={[styles.title, { marginBottom: 0 }]}>Settings</Text>
+      </View>
+
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: 24 }]} showsVerticalScrollIndicator={false}>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Business Profile</Text>
@@ -380,6 +360,50 @@ export default function SettingsScreen() {
               disabled={saving}
             >
               <Text style={styles.saveBtnText}>{saving ? 'Saving...' : 'Update Name'}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* ── App Maintenance Section ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Version Info</Text>
+          <View style={styles.card}>
+            <TouchableOpacity 
+              style={styles.contactRow}
+              onPress={handleCheckForUpdate}
+              disabled={updateChecking}
+            >
+              <View style={[styles.contactIcon, { backgroundColor: '#e1f5fe' }]}>
+                <Ionicons name={updateChecking ? "time" : "sync"} size={22} color="#0277bd" />
+              </View>
+              <View flex={1}>
+                <Text style={styles.contactLabel}>App Updates</Text>
+                <Text style={[styles.contactValue, { color: '#0277bd' }]}>
+                  {updateChecking ? 'Checking...' : 'Check for Update'}
+                </Text>
+              </View>
+              <Text style={styles.contactArrow}>→</Text>
+            </TouchableOpacity>
+
+          </View>
+        </View>
+
+        {/* ── Getting Started Section ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Getting Started</Text>
+          <View style={styles.card}>
+            <TouchableOpacity 
+              style={styles.contactRow}
+              onPress={() => setShowHowToModal(true)}
+            >
+              <View style={[styles.contactIcon, { backgroundColor: '#e8f5e9' }]}>
+                <Ionicons name="book" size={20} color="#2e7d32" />
+              </View>
+              <View flex={1}>
+                <Text style={styles.contactLabel}>How to Use This App</Text>
+                <Text style={[styles.contactValue, { color: '#2e7d32' }]}>Step-by-step guide</Text>
+              </View>
+              <Text style={styles.contactArrow}>→</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -504,31 +528,54 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Help & Support</Text>
           <View style={styles.card}>
-            <View style={styles.contactRow}>
-              <View style={styles.contactIcon}><Text>✉️</Text></View>
-              <View flex={1}>
-                <Text style={styles.contactLabel}>Email Support</Text>
-                <Text style={styles.contactValue}>ofosuahmed@gmail.com</Text>
+
+            {/* Contact icon row */}
+            <Text style={[styles.cardSub, { textAlign: 'center', marginBottom: 16 }]}>Get in touch with the developer</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 20, marginBottom: 8 }}>
+              {/* Email */}
+              <View style={{ alignItems: 'center', gap: 6 }}>
+                <TouchableOpacity
+                  onPress={() => Linking.openURL('mailto:ofosuahmed@gmail.com')}
+                  style={{ backgroundColor: '#ffebee', width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', elevation: 2, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 4 }}
+                >
+                  <Ionicons name="mail" size={26} color="#b71c1c" />
+                </TouchableOpacity>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: '#94a3b8' }}>Email</Text>
+              </View>
+
+              {/* Call */}
+              <View style={{ alignItems: 'center', gap: 6 }}>
+                <TouchableOpacity
+                  onPress={() => Linking.openURL('tel:+233553484762')}
+                  style={{ backgroundColor: '#fce4ec', width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', elevation: 2, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 4 }}
+                >
+                  <Ionicons name="call" size={24} color="#c62828" />
+                </TouchableOpacity>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: '#94a3b8' }}>Call</Text>
+              </View>
+
+              {/* WhatsApp */}
+              <View style={{ alignItems: 'center', gap: 6 }}>
+                <TouchableOpacity
+                  onPress={() => Linking.openURL('https://wa.me/233553484762')}
+                  style={{ backgroundColor: '#e8f5e9', width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', elevation: 2, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 4 }}
+                >
+                  <FontAwesome name="whatsapp" size={28} color="#25D366" />
+                </TouchableOpacity>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: '#94a3b8' }}>WhatsApp</Text>
               </View>
             </View>
 
+            <View style={{ height: 1, backgroundColor: '#f1f5f9', marginVertical: 16 }} />
+
+            {/* About the App */}
             <TouchableOpacity 
-              style={[styles.contactRow, { marginTop: 16 }]} 
-              onPress={() => Linking.openURL('tel:+233553484762')}
-            >
-              <View style={[styles.contactIcon, { backgroundColor: '#e8f5e9' }]}><Text>📞</Text></View>
-              <View flex={1}>
-                <Text style={styles.contactLabel}>Call / WhatsApp</Text>
-                <Text style={[styles.contactValue, { color: '#00695c' }]}>+233 55 348 4762</Text>
-              </View>
-              <Text style={styles.contactArrow}>→</Text>
-            </TouchableOpacity>
- 
-            <TouchableOpacity 
-              style={[styles.contactRow, { marginTop: 16 }]} 
+              style={styles.contactRow}
               onPress={() => setShowAboutModal(true)}
             >
-              <View style={[styles.contactIcon, { backgroundColor: '#fcf8ff' }]}><Text>ℹ️</Text></View>
+              <View style={[styles.contactIcon, { backgroundColor: '#f3e5f5' }]}>
+                <Ionicons name="information-circle" size={24} color="#7b1fa2" />
+              </View>
               <View flex={1}>
                 <Text style={styles.contactLabel}>Information</Text>
                 <Text style={[styles.contactValue, { color: '#6a1b9a' }]}>About the App</Text>
@@ -536,34 +583,6 @@ export default function SettingsScreen() {
               <Text style={styles.contactArrow}>→</Text>
             </TouchableOpacity>
 
-            {/* How to Use */}
-            <TouchableOpacity 
-              style={[styles.contactRow, { marginTop: 16 }]} 
-              onPress={() => setShowHowToModal(true)}
-            >
-              <View style={[styles.contactIcon, { backgroundColor: '#e8f5e9' }]}><Text>📖</Text></View>
-              <View flex={1}>
-                <Text style={styles.contactLabel}>Getting Started</Text>
-                <Text style={[styles.contactValue, { color: '#2e7d32' }]}>How to Use This App</Text>
-              </View>
-              <Text style={styles.contactArrow}>→</Text>
-            </TouchableOpacity>
-
-            {/* Check for Update */}
-            <TouchableOpacity 
-              style={[styles.contactRow, { marginTop: 16 }]}
-              onPress={handleCheckForUpdate}
-              disabled={updateChecking}
-            >
-              <View style={[styles.contactIcon, { backgroundColor: '#e3f2fd' }]}><Text>{updateChecking ? '⏳' : '🔄'}</Text></View>
-              <View flex={1}>
-                <Text style={styles.contactLabel}>App Updates</Text>
-                <Text style={[styles.contactValue, { color: '#0277bd' }]}>
-                  {updateChecking ? 'Checking...' : 'Check for Update'}
-                </Text>
-              </View>
-              <Text style={styles.contactArrow}>→</Text>
-            </TouchableOpacity>
           </View>
         </View>
 
@@ -696,7 +715,7 @@ export default function SettingsScreen() {
                       <Text style={{ fontSize: 40 }}>⚙️</Text>
                    </View>
                    <Text style={{ fontSize: 22, fontWeight: '900', color: '#1a1a2e' }}>Sales App</Text>
-                   <Text style={{ fontSize: 13, color: '#94a3b8', fontWeight: '700' }}>Version 1.0.0 (Stable)</Text>
+                   <Text style={{ fontSize: 13, color: '#94a3b8', fontWeight: '700' }}>Version 2.0.0 (Stable)</Text>
                 </View>
 
                 <Text style={styles.aboutTag}>PURPOSE</Text>
@@ -831,7 +850,7 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        <Text style={styles.footerText}>Sales App v1.0.0</Text>
+        <Text style={styles.footerText}>Sales App v2.0.0</Text>
         <Text style={styles.footerSub}>Secure Offline Financial Management</Text>
       </ScrollView>
     </View>

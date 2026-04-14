@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
-  ScrollView, Alert, SafeAreaView, KeyboardAvoidingView, Platform
+  ScrollView, Alert, KeyboardAvoidingView, Platform
 } from 'react-native';
+import { MaterialIcons, FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -129,7 +130,7 @@ export default function AddCreditorPaymentScreen({ route, navigation }) {
           <View style={styles.card}>
             <View style={styles.field}>
               <View style={styles.labelRow}>
-                <Text style={styles.fieldIcon}>💸</Text>
+                <MaterialCommunityIcons name="cash-check" size={14} color="#94a3b8" style={{ marginRight: 6 }} />
                 <Text style={styles.label}>Amount Paid (GH₵)</Text>
               </View>
               <TextInput
@@ -148,8 +149,8 @@ export default function AddCreditorPaymentScreen({ route, navigation }) {
 
             <View style={[styles.field, { borderBottomWidth: 0 }]}>
               <View style={styles.labelRow}>
-                <Text style={styles.fieldIcon}>📅</Text>
-                <Text style={styles.label}>Payment Date</Text>
+                <Ionicons name="calendar-outline" size={14} color="#94a3b8" style={{ marginRight: 6 }} />
+                <Text style={styles.label}>Date Settled</Text>
               </View>
               <TouchableOpacity style={styles.dateBtn} onPress={() => setShowPicker(true)}>
                 <View style={{ flex: 1 }}>
@@ -157,7 +158,7 @@ export default function AddCreditorPaymentScreen({ route, navigation }) {
                   <Text style={styles.dateDay}>{date.toLocaleDateString('en-GB', { weekday: 'long' })}</Text>
                 </View>
                 <View style={styles.calendarIconBg}>
-                  <Text style={styles.dateIcon}>📅</Text>
+                  <Ionicons name="calendar" size={18} color="#b71c1c" />
                 </View>
               </TouchableOpacity>
             </View>
@@ -169,7 +170,7 @@ export default function AddCreditorPaymentScreen({ route, navigation }) {
           <View style={styles.card}>
             <View style={[styles.field, { borderBottomWidth: 0 }]}>
               <View style={styles.labelRow}>
-                <Text style={styles.fieldIcon}>📝</Text>
+                <Ionicons name="document-text-outline" size={14} color="#94a3b8" style={{ marginRight: 6 }} />
                 <Text style={styles.label}>Note / Details</Text>
               </View>
               <TextInput
