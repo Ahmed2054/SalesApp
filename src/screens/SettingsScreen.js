@@ -7,13 +7,13 @@ import { MaterialIcons, FontAwesome, Ionicons, MaterialCommunityIcons } from '@e
 import { StatusBar } from 'expo-status-bar';
 import { checkForUpdates } from '../utils/updateHelper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { 
-  updateSetting, 
-  getSetting, 
-  backupDatabaseFile, 
+import {
+  updateSetting,
+  getSetting,
+  backupDatabaseFile,
   getInternalBackups,
-  restoreDatabaseFromUri, 
-  resetData 
+  restoreDatabaseFromUri,
+  resetData
 } from '../storage/database';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -23,7 +23,7 @@ import { Modal, FlatList } from 'react-native';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
-  
+
   const [businessName, setBusinessName] = useState('');
   const [lastBackup, setLastBackup] = useState('Never');
   const [backupCount, setBackupCount] = useState(0);
@@ -165,8 +165,8 @@ export default function SettingsScreen() {
       'Are you sure? This will OVERWRITE all current data. Operation cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Restore Now', 
+        {
+          text: 'Restore Now',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -268,8 +268,8 @@ export default function SettingsScreen() {
       '⚠️ DANGER: This will PERMANENTLY DELETE all your sales records, savings, creditors, and settings. \n\nThis action cannot be undone. Are you absolutely sure?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Erase Everything', 
+        {
+          text: 'Erase Everything',
           style: 'destructive',
           onPress: async () => {
             // Confirm twice for safety
@@ -336,7 +336,7 @@ export default function SettingsScreen() {
   return (
     <View style={styles.root}>
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
-      
+
       {/* ── Fixed Header ── */}
       <View style={{ paddingTop: insets.top + 20, paddingHorizontal: 24, paddingBottom: 16, backgroundColor: '#f8fafc', zIndex: 10, elevation: 2, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }}>
         <Text style={[styles.title, { marginBottom: 0 }]}>Settings</Text>
@@ -354,8 +354,8 @@ export default function SettingsScreen() {
               onChangeText={setBusinessName}
               placeholder="e.g. My Awesome Shop"
             />
-            <TouchableOpacity 
-              style={[styles.saveBtn, saving && { opacity: 0.5 }]} 
+            <TouchableOpacity
+              style={[styles.saveBtn, saving && { opacity: 0.5 }]}
               onPress={handleSaveProfile}
               disabled={saving}
             >
@@ -368,7 +368,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Version Info</Text>
           <View style={styles.card}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.contactRow}
               onPress={handleCheckForUpdate}
               disabled={updateChecking}
@@ -392,7 +392,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Getting Started</Text>
           <View style={styles.card}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.contactRow}
               onPress={() => setShowHowToModal(true)}
             >
@@ -453,22 +453,22 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>Dashboard Style</Text>
           <View style={styles.card}>
             <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
-              <TouchableOpacity 
-                style={[styles.styleBtn, dashboardStyle === 'scrolling' && styles.styleBtnActive]} 
+              <TouchableOpacity
+                style={[styles.styleBtn, dashboardStyle === 'scrolling' && styles.styleBtnActive]}
                 onPress={async () => { setDashboardStyle('scrolling'); await updateSetting('dashboard_ticker_style', 'scrolling'); }}
               >
                 <Text style={styles.styleBtnEmoji}>Auto</Text>
                 <Text style={[styles.styleBtnText, dashboardStyle === 'scrolling' && { color: '#fff' }]}>Scroll</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.styleBtn, dashboardStyle === 'flipping' && styles.styleBtnActive]} 
+              <TouchableOpacity
+                style={[styles.styleBtn, dashboardStyle === 'flipping' && styles.styleBtnActive]}
                 onPress={async () => { setDashboardStyle('flipping'); await updateSetting('dashboard_ticker_style', 'flipping'); }}
               >
                 <Text style={styles.styleBtnEmoji}>Auto</Text>
                 <Text style={[styles.styleBtnText, dashboardStyle === 'flipping' && { color: '#fff' }]}>Flip</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.styleBtn, dashboardStyle === 'static' && styles.styleBtnActive]} 
+              <TouchableOpacity
+                style={[styles.styleBtn, dashboardStyle === 'static' && styles.styleBtnActive]}
                 onPress={async () => { setDashboardStyle('static'); await updateSetting('dashboard_ticker_style', 'static'); }}
               >
                 <Text style={styles.styleBtnEmoji}>None</Text>
@@ -569,7 +569,7 @@ export default function SettingsScreen() {
             <View style={{ height: 1, backgroundColor: '#f1f5f9', marginVertical: 16 }} />
 
             {/* About the App */}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.contactRow}
               onPress={() => setShowAboutModal(true)}
             >
@@ -603,8 +603,8 @@ export default function SettingsScreen() {
 
               <View style={{ padding: 24, alignItems: 'center' }}>
                 <Text style={styles.cardSub}>
-                  {pinPhase === 'verify' 
-                    ? 'Enter current 4-digit security code' 
+                  {pinPhase === 'verify'
+                    ? 'Enter current 4-digit security code'
                     : 'Choose a new 4-digit security code'}
                 </Text>
 
@@ -618,9 +618,9 @@ export default function SettingsScreen() {
 
                 <View style={[styles.keypad, { width: 260 }]}>
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9, 'C', 0, '✓'].map(k => (
-                    <TouchableOpacity 
-                      key={k} 
-                      style={[styles.key, { width: 70, height: 70 }]} 
+                    <TouchableOpacity
+                      key={k}
+                      style={[styles.key, { width: 70, height: 70 }]}
                       onPress={() => {
                         if (k === 'C') setPinInput('');
                         else if (k === '✓') handlePinSubmit();
@@ -708,14 +708,14 @@ export default function SettingsScreen() {
                   <Text style={styles.closeBtnText}>✕</Text>
                 </TouchableOpacity>
               </View>
-              
+
               <ScrollView contentContainerStyle={{ padding: 24 }}>
                 <View style={{ alignItems: 'center', marginBottom: 20 }}>
-                   <View style={{ width: 80, height: 80, borderRadius: 24, backgroundColor: '#1a237e', justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
-                      <Text style={{ fontSize: 40 }}>⚙️</Text>
-                   </View>
-                   <Text style={{ fontSize: 22, fontWeight: '900', color: '#1a1a2e' }}>Sales App</Text>
-                   <Text style={{ fontSize: 13, color: '#94a3b8', fontWeight: '700' }}>Version 2.0.0 (Stable)</Text>
+                  <View style={{ width: 80, height: 80, borderRadius: 24, backgroundColor: '#1a237e', justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
+                    <Text style={{ fontSize: 40 }}>⚙️</Text>
+                  </View>
+                  <Text style={{ fontSize: 22, fontWeight: '900', color: '#1a1a2e' }}>Sales App</Text>
+                  <Text style={{ fontSize: 13, color: '#94a3b8', fontWeight: '700' }}>Version 2.0.0 (Stable)</Text>
                 </View>
 
                 <Text style={styles.aboutTag}>PURPOSE</Text>
@@ -734,7 +734,7 @@ export default function SettingsScreen() {
                 </Text>
 
                 <View style={{ marginTop: 24, padding: 16, backgroundColor: '#f8fafc', borderRadius: 16 }}>
-                   <Text style={{ textAlign: 'center', fontSize: 11, color: '#94a3b8', fontWeight: '800' }}>DESIGNED FOR OFFLINE SUCCESS</Text>
+                  <Text style={{ textAlign: 'center', fontSize: 11, color: '#94a3b8', fontWeight: '800' }}>DESIGNED FOR OFFLINE SUCCESS</Text>
                 </View>
               </ScrollView>
             </View>
@@ -754,7 +754,8 @@ export default function SettingsScreen() {
               <ScrollView contentContainerStyle={{ padding: 24 }} showsVerticalScrollIndicator={false}>
 
                 {[
-                  { icon: '💰', title: 'Recording Sales', color: '#1a237e',
+                  {
+                    icon: '💰', title: 'Recording Sales', color: '#1a237e',
                     steps: [
                       'Tap the Sales tab at the bottom.',
                       'Press the ＋ button to add a new sale.',
@@ -763,7 +764,8 @@ export default function SettingsScreen() {
                       'Swipe left on any record to Edit or Delete it.',
                     ]
                   },
-                  { icon: '🏦', title: 'Tracking Savings', color: '#00695c',
+                  {
+                    icon: '🏦', title: 'Tracking Savings', color: '#00695c',
                     steps: [
                       'Tap the Savings tab.',
                       'Press ＋ to record a Deposit or Withdrawal.',
@@ -771,7 +773,8 @@ export default function SettingsScreen() {
                       'Swipe left on a record to edit or delete it.',
                     ]
                   },
-                  { icon: '🤝', title: 'Managing Debtors', color: '#0277bd',
+                  {
+                    icon: '🤝', title: 'Managing Debtors', color: '#0277bd',
                     steps: [
                       'Tap the Debtors tab — these are people who OWE YOU money.',
                       'Press ＋ to add a new debtor.',
@@ -783,7 +786,8 @@ export default function SettingsScreen() {
                       'The Share button will send their debt summary directly via WhatsApp if ticked.',
                     ]
                   },
-                  { icon: '📋', title: 'Managing Creditors', color: '#b71c1c',
+                  {
+                    icon: '📋', title: 'Managing Creditors', color: '#b71c1c',
                     steps: [
                       'Tap the Creditors tab — these are people YOU OWE money.',
                       'Press ＋ to add a creditor.',
@@ -791,7 +795,8 @@ export default function SettingsScreen() {
                       'Share their record or payment details anytime using the Share pill.',
                     ]
                   },
-                  { icon: '🔒', title: 'Security & Lock', color: '#4a148c',
+                  {
+                    icon: '🔒', title: 'Security & Lock', color: '#4a148c',
                     steps: [
                       'Go to Settings → Security.',
                       'Enable PIN App Lock and set a 4-digit code.',
@@ -799,7 +804,8 @@ export default function SettingsScreen() {
                       'Tap "Change App PIN" to update your code anytime.',
                     ]
                   },
-                  { icon: '🗂️', title: 'Backup & Restore', color: '#e65100',
+                  {
+                    icon: '🗂️', title: 'Backup & Restore', color: '#e65100',
                     steps: [
                       'Go to Settings → Data Management.',
                       'Tap "Backup & Restore Files" to create an internal snapshot.',
@@ -841,16 +847,16 @@ export default function SettingsScreen() {
               <Text style={{ fontSize: 20 }}>⚖️</Text>
               <View style={{ flex: 1 }}>
                 <Text style={styles.disclaimerText}>
-                   All data is stored locally on this device. You are responsible for maintaining your own backups. 
-                   The developer is not responsible for any data loss, financial inaccuracies, or damages resulting 
-                   from the use of this application.
+                  All data is stored locally on this device. You are responsible for maintaining your own backups.
+                  The developer is not responsible for any data loss, financial inaccuracies, or damages resulting
+                  from the use of this application.
                 </Text>
               </View>
             </View>
           </View>
         </View>
 
-        <Text style={styles.footerText}>Sales App v2.0.0</Text>
+        <Text style={styles.footerText}>Sales App v2.0.1</Text>
         <Text style={styles.footerSub}>Secure Offline Financial Management</Text>
       </ScrollView>
     </View>
@@ -861,18 +867,18 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#f8fafc' },
   scroll: { padding: 24, paddingBottom: 60 },
   title: { fontSize: 32, fontWeight: '900', color: '#1a1a2e', marginBottom: 30 },
-  
+
   section: { marginBottom: 32 },
   sectionTitle: { fontSize: 13, fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 12, marginLeft: 4 },
   subTitle: { fontSize: 11, fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, marginLeft: 4 },
-  
+
   card: { backgroundColor: '#fff', borderRadius: 24, padding: 20, elevation: 4, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10 },
   cardRow: { backgroundColor: '#fff', borderRadius: 24, padding: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', elevation: 4, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10 },
 
   supportLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   supportText: { fontSize: 16, fontWeight: '700', color: '#1e293b' },
   supportArrow: { fontSize: 18, color: '#94a3b8', fontWeight: '800' },
-  
+
   cardLabel: { fontSize: 16, fontWeight: '800', color: '#1e293b' },
   cardSub: { fontSize: 13, color: '#64748b', marginTop: 2, fontWeight: '600' },
 
@@ -883,7 +889,7 @@ const styles = StyleSheet.create({
 
   label: { fontSize: 12, fontWeight: '800', color: '#94a3b8', marginBottom: 8 },
   input: { backgroundColor: '#f1f5f9', borderRadius: 14, padding: 16, fontSize: 16, color: '#1e293b', fontWeight: '600' },
-  
+
   saveBtn: { backgroundColor: '#1a237e', borderRadius: 16, padding: 14, alignItems: 'center', marginTop: 16 },
   saveBtnText: { color: '#fff', fontSize: 14, fontWeight: '800' },
 
@@ -948,7 +954,7 @@ const styles = StyleSheet.create({
   },
   styleBtnText: { fontSize: 13, fontWeight: '800', color: '#64748b', marginTop: 4 },
   styleBtnEmoji: { fontSize: 20 },
-  
+
   contactRow: { flexDirection: 'row', alignItems: 'center' },
   contactIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center', marginRight: 16 },
   contactLabel: { fontSize: 11, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase' },
