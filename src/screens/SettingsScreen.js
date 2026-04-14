@@ -308,7 +308,7 @@ export default function SettingsScreen() {
     setUpdateChecking(true);
     try {
       const res = await fetch(
-        'https://api.github.com/repos/TM1-Ahmed/SalesApp/releases/latest',
+        'https://api.github.com/repos/Ahmed2054/SalesApp/releases/latest',
         { headers: { Accept: 'application/vnd.github.v3+json' } }
       );
       if (!res.ok) throw new Error('not ok');
