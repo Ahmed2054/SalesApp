@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "SalesRecorder2",
+    "name": "Sales App",
     "slug": "SalesRecorder2",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -15,15 +15,26 @@
       "supportsTablet": true
     },
     "android": {
+      "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "package": "com.ahmedofosu.sales"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "@react-native-community/datetimepicker",
+      "expo-sqlite"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b73bf01c-0766-4268-adad-aea9b7b509ba"
+      }
     }
   }
 }
